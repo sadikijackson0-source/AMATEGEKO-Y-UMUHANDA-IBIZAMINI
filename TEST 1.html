@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+<meta charset="UTF-8">
+<title>Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+h2#timer {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+}
+
+#startScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+#startScreen input {
+    padding: 8px;
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+#startScreen button {
+    padding: 10px 20px;
+    font-size: 18px;
+    margin-top: 10px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#questionNav {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    margin-bottom: 10px;
+}
+
+.qBtn {
+    min-width: 40px;
+    height: 40px;
+    background: #ccc;
+    border: 1px solid #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
+.qBtn.answered {
+    background: #2196F3;
+    color: white;
+}
+
+#quiz {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#quiz h3 {
+    white-space: normal;
+    word-break: break-word;
+}
+
+label {
+    display: block;
+    margin: 5px 0;
+    cursor: pointer;
+    position: relative;
+}
+
+label span {
+    display: inline-block;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+label input[type="radio"]:checked + span {
+    background-color: #d4edda;
+    font-weight: bold;
+}
+
+label input[type="radio"]:checked + span::after {
+    content: " ✓";
+    color: green;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+button {
+    padding: 10px 18px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 5px 2px;
+    border: none;
+    border-radius: 5px;
+}
+
+.finishBtn { background-color: green; color:white;}
+.prevBtn, .nextBtn { background-color: #2196F3; color:white;}
+#btnContainer { text-align:right; margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div id="header" style="display:none">
+    <h2 id="timer">20:00</h2>
+</div>
+
+<div id="startScreen">
+    <h1>Enter your code to start</h1>
+    <input type="text" id="codeInput" placeholder="Enter code">
+    <button id="startBtn">TANGIRA</button>
+</div>
+
+<div id="questionNav"></div>
+<div id="quiz"></div>
+<div id="review"></div>
+
+<script>
+// ------------------- QUIZ DATA -------------------
+let quizData = [
+{question:"IYO UBUGARI BW’INZIRA NYABAGENDWA IGENDERWAMO N’IBINYABIZIGA BUDAHAGIJE KUGIRA NGO BIBISIKANE NTA NKOMYI ABAGENZI BATEGETSWE :",options:["KUNYURA MU NZIRA Z’IMPANDE Z’ABANYAMAGURU","GUHAGARARA AHO BAGEZA","KOROHERANA","GUKURAHO INKOMYI"],answer:2},
+
+{question:"KUKI ABANYAMAGURU BATEMEREWE KWAMBUKA UMUHANDA MW’IKONI CYANGWA HAFI Y’IMODOKA IHAGAZE?",options:["INGARUKA KUBINDI BINYABIZIGA","INGARUKA KUBANDI BAKORESHA UMUHANDA","ABANDI BAYOBOZI BI BINYABIZAGA BAZA BASHOBORA KUTABONA ABAMBUKA UMUHANDA","IBISUBIZO BYOSE NI UKURI"],answer:2},
+
+{question:"WEGEREYE INZIRA Y’ABANYAMAGURU UGASANGA BATEGEREJE KWAMBUKA. UGOMBA GUKORA IKI?",options:["KUREKA ABAKUZE N’ABAFITE UBUMUGA BAGATAMBUKA","GUKORESHA AMATARA ABAMENYESHA KWAMBUKA","GUKORESHA IBIMENYETSO BY’AMABOKO BIBEMERERA KWAMBUKA","KUGABANYA UMUVUDUKO WITEGURA GUHAGARARA"],answer:3},
+
+{question:"URWEGO B IMODOKA ZAGENEWE GUTWARA ABANTU KANDI ZIFITE IMYANYA YO KWICARAMO HATABARIWEMO UW’UMUYOBOZI :",options:["IRENGA 8","ITARENGA 8","ITARENGA 18","NTAGISUBIZO CYUKURI KIRIMO"],answer:1},
+
+{question:"IKINYABIZIGA KIBUJIJWE GUHAGARARA AKANYA KANINI AHA HAKURIKIRA :",options:["AHATARENGEJE METERO 1 IMBERE CYANGWA INYUMA Y’IKINYABIZIGA GIHAGAZE AKANYA GATO CYANGWA KANINI","AHANTU HARI IBIMENYETSO BIBUZA BYABUGENEWE","AHO ABANYAMAGURU BANYURA MU MUHANDA NGO BAKIKIRE INKOMYI","IBISUBIZO BYOSE NIBYO"],answer:3},
+
+{question:"KU BYEREKEYE KWEREKANA IBINYABIZIGA NO KUMURIKA KWABYO NDETSE NO KWEREKANA IHINDURWA RY’IBYEREKEZO BYABYO BIRABUJIJWE GUKORA ANDI AMATARA CYANGWA UTUGARURARUMURI URETSE IBITEGETSWE ARIKO NTIBIREBA AMATARA AKURIKIRA:",options:["AMATARA NDANGA","AMATARA ARI IMBERE MU MODOKA","AMATARA NDANGABURAMBARARE","IBISUBIZO BYOSE NIBYO"],answer:1},
+
+{question:"IKINYABIZIGA NTIGISHOBORA KUGIRA AMATARA ARENGA ABIRI Y’UBWOKO BUMWE KERETSE KUBYEREKEYE AMATARA AKURIKIRA:",options:["ITARA NDANGAMUBYIMBA","ITARA RYEREKANA ICYEREKEZO","ITARA NDANGABURUMBARARE","IBISUBIZO BYOSE NI UKURI"],answer:3},
+
+{question:"IBINYABIZIGA BIKORESHWA NKA TAGISI, BITEGEREREZA ABANTU MU NZIRA NYABAGENDWA, BISHOBORA GUSHYIRWAHO ITARA RYEREKANA KO IKINYABIZIGA KITAKODESHEJWE. IRYO TARA RISHYIRWAHO KU BURYO BUKURIKIRA:",options:["NI ITARA RY’ICYATSI RISHYIRWA IMBERE KU KINYABIZIGA","NI ITARA RY’ICYATSI RISHYIRWA IBUMOSO","NI ITARA RY’UMUHONDO RISHYIRWA INYUMA","A NA C NI IBISUBIZO BY’UKURI"],answer:0},
+
+{question:"NI RYARI USHOBORA KWAKIRIZA ICYARIMWE AMATARA YOSE NDANGACYEREKEZO ?",options:["MU GIHE USHAKA KUBURIRA ABANDI","MU GIHE IKINYABIZIGA CYAWE GISHOBORA GUTEZA IBYAGO","A NA B NI IBISUBIZO BY’UKURI","NTAGISUBIZO CY’UKURI KIRIMO"],answer:2},
+
+{question:"KUNYURANAHO BIBUJIJWE GUSA IGIHE:",options:["IGIHE MU MUHANDA HAGATI HASHUSHANYIJEMO UMURONGOW’UMWERU UCAGAGUYE.","UMUHANDA USHUSHANYIJWEMO UMURONGO WERA UDACAGAGUYE"," IKINYABIZIGA GITWAWE KU MUSOZI UNYERERA","NTA GISUBIZO CY'UKURI KIRIMO"],answer:1},
+
+{question:"NI JORO UCANYE AMATARA MAREMARE UGAHURA N’IKINDI KINYABIZIGA:",options:["GUKOMEZA IBUMOSO","KUZIMYA NO GUCANA AMATARA MAREMARE N’AMAGUFI","KUZIMYA AMATARA MAREMARE KUGEZA IKINDI KINYABIZIGA GITAMBUTSE","NTA GISUBIZO CY'UKURI KIRIMO"],answer:2},
+
+{question:"ROMORUKI ZIFITE UBUGARI NTARENGWA BWA CM 80 ZISHOBORA GUSHYIRWAHO AKAGARURARUMURI KAMWE GUSA IYO ZIKURUWE N’IBINYABIZIGA BIKURIKIRA",options:["VELOMOTELI","IPIKIPIKI IDAFITE AKANYABIZIGA KU RUHANDE","AMAVATIRI Y’IFASI","NTA GISUBIZO CY'UKURI KIRIMO"],answer:1},
+
+{question:"KU BAYOBOZI B’INYAMASWA ZIKURURA, ZABA ZIZIRITSE CG ZITAZIRITSE KU CYO ZIKURURA NO KU BAYOBOZI B’INYAMASWA ZIKOREYE CG ZIGENDERWAMO IMYAKA Y’IFATIZO NI :",options:["12","15","14","18"],answer:2},
+
+{question:"IYO HAGATI Y’URUHANDE RW’IMBERE RWA ROMORUKI N’URUHANDE RW’INYUMA RW’IKINYABIZIGA KIYIKURURA HARI UMWANYA URENZE M3 IKIBIZIRIKIRANYIJE KIGOMBA KUGARAGAZWA KU BURYO BUKURIKIRA IYO AMATARA Y’IKINYABIZIGA AGOMBA GUCANWA :",options:["AGATAMBARO GATUKURA GAFITE CM 50 Z’URUHANDE ","ITARA RISA N’ICUNGA RIHISHIJE RIGARAGARA MU MBAVU IGIHE IKIBIZIRIKIRANYIJE KIMURITSWE ","A NA B NI IBISUBIZO BY'UKURI","NTAGISUBIZO CY'UKURI KIRIMO"],answer:1},
+
+{question:"IMIRONGO YERA ITEGANYE N’UMURONGO UGABANYA UMUHANDA MO KABIRI MU BUREBURE BWAWO UGARAGAZA :",options:["AHANYURWA N'AMAGARE NA VELOMOTERI","AHANYURWA N’INGOROFANI N’IBINYAMITENDE","AHANYURWA N’ABANYAMAGURU ","NTAGISUBIZO CY'UKURI KIRIMO"],answer:2},
+
+{question:"GUHAGARARA AKANYA GATO NO GUHAGARARA AKANYA KANINI BIBUJIJWE CYANE CYANE AHA HAKURIKIRA.",options:["KU MIHANDA Y’ICYEREKEZO KIMWE HOSE.","MU RUHANDE RUTEGANYE N’URWO IKINDI KINYABIZIGA GIHAGAZEMO AKANYA GATO CYANGWA KANINI ","KU MIHANDA IBISIKANIRWAMO, IYO UBUGARI BW’UMWANYA W’IBINYABIZIGA UGOMBA GUTUMA BIBISIKANA BUTAGIFITE M12","IBISUBIZO BYOSE NIBYO"],answer:1},
+
+{question:"IKINYABIZIGA CYANGWA IBINYABIZIGA BIKURURANA BIFITE IMITAMBIKO IBIRI IKURIKIRANYE MU BUGARI BWAWO NI UKUVUGA IMITAMBIKO YIHINDUKIZA KUCYO IFUNGIYEHO, UBUREBURE BWABYO NTIBUGOMBA KURENZA IBIPIMO BIKURIKIRA :",options:["M11","M10","M7","NTAGISUBIZO CY'UKURI KIRIMO"],answer:2},
+
+{question:"BIRABUJIJWE KUGENZA IBINYABIZIGA BIGENDESHWA NA MOTERI NA ZA ROMORUKI ZIKURURWA NABYO, IYO IBIZIGA BYAMBAYE INZIGA ZIDAHAGWA CYANGWA INZIGA ZIKURURUKA ZIFITE UMUBYIMBA URI HASI YA CM4. ARIKO IBYO NTIBIKURIKIZWA KU BINYABIZIGA BIKURIKIRA : ",options:["KU BINYABIZIGA BY’INGABO","IBINYABIZIGA BIHINGA IYO BIGENDESHWA MU KARERE KATARENGA KM 25 UVUYE AHO ZIBA ","IBINYABIZIGA BYA POLICE","NTAGISUBIZO CY'UKURI KIRIMO"],answer:1},
+
+{question:"BURI MODOKA CYANGWA BURI ROMORUKI IKURUWE N’IYO MODOKA BISHOBORA KUGIRA ITARA RITUMA UMUYOBOZI YEREKANA KO YABONYE IKIMENYETSO CY’UWITEGURA KUMUNYURAHO. IRYO TARA RIFITE AMABARA AKURIKIRA :",options:["UMUHONDO","ICYATSI KIBISI","UMWERU","UMUTUKU"],answer:1},
+
+{question:"IYO ITARA RY’UMUHONDO RIMYATSA RIKORESHEJWE MU MASANGANO Y’AMAYIRA AHWANYIJE AGACIRO RISHYIRWA AHAGANA HE :",options:["KURI BURI NZIRA","HAGATI Y’AMASANGANO","IBURYO BW’AMASANGANO","A NA B NI IBISUBIZO BY'UKURI"],answer:3}
+];
+
+// ------------------- STATE -------------------
+let currentQuestion = 0;
+let userAnswers = Array(quizData.length).fill(undefined);
+let timer;
+let timeLeft = 20*60;
+const letters = ['A','B','C','D','E','F','G','H'];
+
+const startBtn = document.getElementById("startBtn");
+const timerEl = document.getElementById("timer");
+const quizEl = document.getElementById("quiz");
+const reviewEl = document.getElementById("review");
+const navEl = document.getElementById("questionNav");
+const startScreen = document.getElementById("startScreen");
+const header = document.getElementById("header");
+
+// ------------------- HELPER -------------------
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// ------------------- FUNCTIONS -------------------
+function buildNav(){
+    navEl.innerHTML="";
+    for(let i=0;i<quizData.length;i++){
+        let b=document.createElement("div");
+        b.className="qBtn";
+        b.textContent=i+1;
+        if(userAnswers[i]!==undefined) b.classList.add("answered");
+        b.onclick=()=>{currentQuestion=i; showQuestion();}
+        navEl.appendChild(b);
+    }
+}
+
+startBtn.addEventListener("click", ()=>{
+    const codeInput = document.getElementById("codeInput").value.trim();
+    if(codeInput==="") { alert("Please enter code"); return; }
+
+    quizData = shuffleArray(quizData); // shuffle questions only
+
+    startScreen.style.display="none";
+    header.style.display="flex";
+    buildNav();
+    showQuestion();
+    startTimer();
+});
+
+function showQuestion(){
+    if(currentQuestion>=quizData.length) return finishQuiz();
+    let q=quizData[currentQuestion];
+    let html=`<h3>${currentQuestion+1}. ${q.question}</h3>`;
+    q.options.forEach((opt,i)=>{
+        const checked = userAnswers[currentQuestion]===i?'checked':'';
+        html+=`<label><input type="radio" name="opt" value="${i}" ${checked} onclick="optionClicked(${i})"> <span>${letters[i]}. ${opt}</span></label>`;
+    });
+    html+=`<div id="btnContainer">`;
+    if(currentQuestion>0) html+=`<button class="prevBtn" onclick="prevQuestion()">Previous</button>`;
+    if(currentQuestion<quizData.length-1) html+=`<button class="nextBtn" onclick="nextQuestion()">Next</button>`;
+    else html+=`<button class="finishBtn" onclick="finishQuiz()">SOZA IKIZAMINI</button>`;
+    html+=`</div>`;
+    quizEl.innerHTML=html;
+    buildNav();
+}
+
+window.optionClicked=function(i){
+    userAnswers[currentQuestion]=i;
+    buildNav();
+}
+
+window.nextQuestion=function(){
+    currentQuestion++;
+    showQuestion();
+}
+window.prevQuestion=function(){
+    if(currentQuestion===0) return;
+    currentQuestion--;
+    showQuestion();
+}
+
+function startTimer(){
+    timer=setInterval(()=>{
+        timeLeft--;
+        let m=String(Math.floor(timeLeft/60)).padStart(2,'0');
+        let s=String(timeLeft%60).padStart(2,'0');
+        timerEl.textContent=`${m}:${s}`;
+        if(timeLeft<=0){
+            clearInterval(timer);
+            finishQuiz();
+        }
+    },1000);
+}
+
+function finishQuiz(){
+    clearInterval(timer);
+    quizEl.innerHTML="";
+    navEl.innerHTML="";
+    let score=0;
+    let out=`<h2>Amanota yawe: </h2>`;
+    quizData.forEach((q,i)=>{
+        const correct=q.answer;
+        const user=userAnswers[i];
+        if(user===correct) score++;
+        out+=`<div style="margin-bottom:12px;"><strong>${i+1}. ${q.question}</strong><br>`;
+        q.options.forEach((opt,idx)=>{
+            let color="black";
+            let label = letters[idx];
+            if(user===undefined) color="orange";
+            else if(idx===correct) color="green";
+            if(user===idx && user!==correct) color="red";
+            out+=`<div style="color:${color}; margin-left:10px;">${label}. ${opt}</div>`;
+        });
+        if(user===undefined) out+=`<div style="color:orange; font-weight:bold;">Wataye iki kibazo</div>`;
+        out+=`</div>`;
+    });
+    out+=`<h3>Score: ${score} / ${quizData.length}</h3>`;
+    out+=`
+        <button onclick="retakeQuiz()">Tangira Ukundi</button>
+        <button onclick="copyReview()">Copy Amanota</button>
+    `;
+    reviewEl.innerHTML=out;
+}
+
+function retakeQuiz(){
+    userAnswers = Array(quizData.length).fill(undefined);
+    currentQuestion = 0;
+    timeLeft = 20*60;
+    reviewEl.innerHTML="";
+    startScreen.style.display="flex";
+    header.style.display="none";
+}
+
+function copyReview(){
+    const textToCopy = reviewEl.innerText;
+    navigator.clipboard.writeText(textToCopy).then(()=>{
+        alert("Amanota yawe yanditswe muri clipboard!");
+    });
+}
+</script>
+</body>
+</html>
